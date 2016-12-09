@@ -14,13 +14,14 @@ import json
 import random
 import functools
 import cv2
+import importlib
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 import ocrAPI
-reload(ocrAPI)
+importlib.reload(ocrAPI)
 
 # How to call the ocrAPI functions :
 # ocrAPI.test()

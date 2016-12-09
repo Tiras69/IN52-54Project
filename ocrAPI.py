@@ -21,5 +21,5 @@ from PyQt5.QtCore import *
 
 
 def test():
-	print "Pouet pouet"
+	print ("Pouet pouet")
 
