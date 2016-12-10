@@ -178,6 +178,29 @@ class ocrGUI(QWidget):
 
 
     def openResult(self):
+<<<<<<< HEAD
+
+        img = cv2.imread('coucou.jpg')
+        cv2.imshow('coucou', img)
+
+
+        #self.resultWindowLabel = QLabel()
+        #self.resultWindowGrid = QGridLayout()
+
+        #self.resultWindow = QWidget()
+        #if not self.resultPlaceholderPixmap.isNull() :
+        #    self.resultWindowLabel.setPixmap(self.resultPlaceholderPixmap.scaled(640, 480, Qt.KeepAspectRatio, Qt.FastTransformation))
+        #self.resultWindowGrid.addWidget(self.resultWindowLabel, 0, 0, 0, 0)
+
+        #self.resultWindow.setWindowModality(Qt.ApplicationModal);
+        #self.resultWindow.setLayout(self.resultWindowGrid)
+        #self.resultWindow.resize(640, 480)
+        #self.resultWindow.setWindowTitle("RESULT")
+        
+        #self.resultWindow.show()
+        coucou = str(self.basicDatabaseLineEdit.text())
+        print (coucou)
+=======
         self.resultWindow = QWidget()
         self.resultWindowLabel = QLabel()
         self.resultWindowGrid = QGridLayout()
@@ -191,6 +214,7 @@ class ocrGUI(QWidget):
         self.resultWindow.resize(640, 480)
         self.resultWindow.setWindowTitle("RESULT")
         self.resultWindow.show()  
+>>>>>>> 91b8fb0b39dcacdd1aa96486c1eb9caac25b5df6
 
 
     def openAbout(self):

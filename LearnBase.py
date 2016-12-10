@@ -27,12 +27,11 @@ def TTFtoPNG():
     # write all caracters in the font to differents files
     for x in ttf["cmap"].tables:
         for y in x.cmap.items():
-            char_unicode = unichr(y[0])
+            char_unicode = chr(y[0])
             char_utf8 = char_unicode.encode('utf_8')
             char_name = y[1]
-            f = open(os.path.join(TEXTS_DIR, char_name + '.txt'), 'w')
-            f.write(char_utf8)
-            f.close()
+            with open(os.path.join(TEXTS_DIR, char_name + '.txt'), 'wb') as file:
+                file.write(char_utf8)
     ttf.close()
 
     files = os.listdir(TEXTS_DIR)
@@ -40,12 +39,12 @@ def TTFtoPNG():
         name, ext = os.path.splitext(filename)
         input_txt = TEXTS_DIR + "/" + filename
         output_png = IMAGES_DIR + "/" + TTF_NAME + "_" + name + "_" + str(FONT_SIZE) + ".png"
-        subprocess.call(["convert", "-font", TTF_PATH, "-pointsize", FONT_SIZE, "-background", "rgba(0,0,0,0)", "label:@" + input_txt, output_png])
+        subprocess.call(["convert", "-font", str(TTF_PATH), "-pointsize", str(FONT_SIZE), "-background", "rgba(0,0,0,0)", "label:@" + input_txt, output_png])
 
     print("finished")
 
 
 def addBaseFromTTFFile(fontFile):
-    print "hello"
+    print ("hello")
 
 TTFtoPNG()

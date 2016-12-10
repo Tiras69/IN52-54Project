@@ -21,5 +21,13 @@ from PyQt5.QtWidgets import *
 
 
 
+<<<<<<< HEAD
+def test():
+	print ("Pouet pouet")
+
+
+
+=======
 def test(): 
   print ("Pouet pouet") 
+>>>>>>> 91b8fb0b39dcacdd1aa96486c1eb9caac25b5df6
