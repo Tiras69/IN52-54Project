@@ -17,9 +17,9 @@ import cv2
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 
 
-def test():
-	print ("Pouet pouet")
-
+def test(): 
+  print ("Pouet pouet") 

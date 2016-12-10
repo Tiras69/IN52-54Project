@@ -45,3 +45,4 @@ fabric.properties
 #Python files
 
 *.pyc
+res/cameraGetFrame.png

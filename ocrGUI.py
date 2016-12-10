@@ -35,6 +35,9 @@ class ocrGUI(QWidget):
         self.lastDatabasePath = ""
         self.lastTestImagePath = ""
         self.lastExportResultPath = ""
+        self.cameraStop = False;
+        self.cameraFeed = ""
+
         self.ppSetting = pprint.PrettyPrinter(indent=4)
         
         self.initUI()
@@ -61,6 +64,9 @@ class ocrGUI(QWidget):
         self.basicExportResultButton = QPushButton("BROWSE")
         self.basicComputeButton = QPushButton("COMPUTE BASIC CHARACTERS RECOGNITION")
         self.cameraDatabaseButton = QPushButton("BROWSE")
+        self.cameraStartButton = QPushButton("START CAMERA CAPTURE")
+        self.cameraGetButton = QPushButton("GET CAMERA FRAME")
+        self.cameraStopButton = QPushButton("STOP CAMERA CAPTURE")
         self.cameraExportResultButton = QPushButton("BROWSE")
         self.cameraComputeButton = QPushButton("COMPUTE CAMERA CHARACTERS RECOGNITION")
 
@@ -86,7 +92,7 @@ class ocrGUI(QWidget):
         self.quitAction = QAction("Quit", self.fileMenu)
         self.aboutAction = QAction("About", self.helpMenu)
 
-        self.cameraPlaceholderPixmap = QPixmap("res/cameraPlaceholder.png")
+        self.cameraGetPixmap = QPixmap("res/cameraPlaceholder.png")
         self.resultPlaceholderPixmap = QPixmap("res/resultPlaceholder.png")
 
         #------------------------------------------------------------------------------------
@@ -100,13 +106,17 @@ class ocrGUI(QWidget):
         self.menuBar.addMenu(self.optionMenu)
         self.menuBar.addMenu(self.helpMenu)
 
-        if not self.cameraPlaceholderPixmap.isNull() :
-            self.cameraPreviewLabel.setPixmap(self.cameraPlaceholderPixmap.scaled(640, 480, Qt.KeepAspectRatio, Qt.FastTransformation))
+        if not self.cameraGetPixmap.isNull() :
+            self.cameraPreviewLabel.setPixmap(self.cameraGetPixmap.scaled(640, 480, Qt.KeepAspectRatio, Qt.FastTransformation))
 
         self.aboutText = "IN52/54 OCR\n\n"
         self.aboutText += "This OCR's objective is to scan an input image, be it a .png image provided by the user, or an image from a webcam.\n"
         self.aboutText += "The data contained in the image are then compared to a database provided by the user. The result will be exported in a .txt file.\n"
         self.aboutText += "\n\nBy ALLIOT Renaud, BEDIR Sibel, JEAN Constantin, METGE Mathieu and SENOUF Joshua."
+
+        self.cameraStartButton.setEnabled(True)
+        self.cameraGetButton.setEnabled(False)
+        self.cameraStopButton.setEnabled(False)
 
         #------------------------------------------------------------------------------------
         #------------------------------ Connects declaration  -------------------------------
@@ -120,6 +130,10 @@ class ocrGUI(QWidget):
         self.basicExportResultButton.clicked.connect(functools.partial(self.exportResultBrowse, self.basicExportResultLineEdit))
         self.cameraDatabaseButton.clicked.connect(functools.partial(self.databaseBrowse, self.cameraDatabaseLineEdit))
         self.cameraExportResultButton.clicked.connect(functools.partial(self.exportResultBrowse, self.cameraExportResultLineEdit))
+
+        self.cameraStartButton.clicked.connect(self.startCaptureCV)
+        self.cameraGetButton.clicked.connect(self.getCaptureCV)
+        self.cameraStopButton.clicked.connect(self.stopCaptureCV)
 
         self.basicComputeButton.clicked.connect(self.openResult)
         self.cameraComputeButton.clicked.connect(self.openResult)
@@ -146,11 +160,14 @@ class ocrGUI(QWidget):
         self.cameraGrid.addWidget(self.cameraDatabaseLabel, 0, 0, 1, 1)
         self.cameraGrid.addWidget(self.cameraDatabaseLineEdit, 0, 1, 1, 1)
         self.cameraGrid.addWidget(self.cameraDatabaseButton, 0, 2, 1, 1)
-        self.cameraGrid.addWidget(self.cameraPreviewLabel, 1, 0, 1, 3)
-        self.cameraGrid.addWidget(self.cameraExportResultLabel, 2, 0, 1, 1)
-        self.cameraGrid.addWidget(self.cameraExportResultLineEdit, 2, 1, 1, 1)
-        self.cameraGrid.addWidget(self.cameraExportResultButton, 2, 2, 1, 1)
-        self.cameraGrid.addWidget(self.cameraComputeButton, 3, 0, 1, 3)
+        self.cameraGrid.addWidget(self.cameraStartButton, 1, 0, 1, 1)
+        self.cameraGrid.addWidget(self.cameraGetButton, 1, 1, 1, 1)
+        self.cameraGrid.addWidget(self.cameraStopButton, 1, 2, 1, 1)
+        self.cameraGrid.addWidget(self.cameraPreviewLabel, 2, 0, 1, 3)
+        self.cameraGrid.addWidget(self.cameraExportResultLabel, 3, 0, 1, 1)
+        self.cameraGrid.addWidget(self.cameraExportResultLineEdit, 3, 1, 1, 1)
+        self.cameraGrid.addWidget(self.cameraExportResultButton, 3, 2, 1, 1)
+        self.cameraGrid.addWidget(self.cameraComputeButton, 4, 0, 1, 3)
 
         self.baseGrid.addWidget(self.ocrTabWidget, 0, 0, 1, 1)
         self.baseGrid.setMenuBar(self.menuBar)
@@ -173,7 +190,6 @@ class ocrGUI(QWidget):
         self.resultWindow.setLayout(self.resultWindowGrid)
         self.resultWindow.resize(640, 480)
         self.resultWindow.setWindowTitle("RESULT")
-        
         self.resultWindow.show()  
 
 
@@ -195,7 +211,7 @@ class ocrGUI(QWidget):
 
 
     def databaseBrowse(self, targetWidget, buffer = None):
-        databaseName = QFileDialog.getOpenFileName(self,"Select your database file", self.lastDatabasePath if self.lastDatabasePath else QDir.homePath(), "Images files (*.jpg *png);;All files (*)")
+        databaseName = QFileDialog.getOpenFileName(self,"Select your database file", self.lastDatabasePath if self.lastDatabasePath else QDir.homePath(), "Images files (*.jpg *.png);;All files (*)")
 
         if databaseName[0]:
             self.lastDatabasePath = databaseName[0].rsplit("/", 1)[0]
@@ -203,7 +219,7 @@ class ocrGUI(QWidget):
 
 
     def testImageBrowse(self, targetWidget, buffer = None):
-        testImageName = QFileDialog.getOpenFileName(self,"Select your test image file", self.lastTestImagePath if self.lastTestImagePath else QDir.homePath(), "Images files (*.jpg *png);;All files (*)")
+        testImageName = QFileDialog.getOpenFileName(self,"Select your test image file", self.lastTestImagePath if self.lastTestImagePath else QDir.homePath(), "Images files (*.jpg *.png);;All files (*)")
 
         if testImageName[0]:
             self.lastTestImagePath = testImageName[0].rsplit("/", 1)[0]
@@ -216,6 +232,44 @@ class ocrGUI(QWidget):
         if exportResultName[0]:
             self.lastExportResultPath = exportResultName[0].rsplit("/", 1)[0]
             return targetWidget.setText(exportResultName[0].rsplit("/", 1)[0] + "/" + exportResultName[0].rsplit("/", 1)[1].split(".", 1)[0] + ".txt")
+
+
+    def startCaptureCV(self):
+        self.cameraStop = False
+        self.cameraStartButton.setEnabled(False)
+        self.cameraGetButton.setEnabled(True)
+        self.cameraStopButton.setEnabled(True)
+
+        self.cameraFeed = cv2.VideoCapture(0)
+
+        while(not self.cameraStop):
+            returnValue, currentFrame = self.cameraFeed.read()
+
+            if(returnValue):
+                cv2.imshow("OpenCV Camera Feed", currentFrame)
+            else:
+                print("Cannot read video feed from webcam !")
+
+            if cv2.waitKey(1) == 0:
+                break
+ 
+
+    def getCaptureCV(self):
+        returnValue, currentFrame = self.cameraFeed.read()
+        cv2.imwrite("res/cameraGetFrame.png", currentFrame)
+        self.cameraGetPixmap = QPixmap("res/cameraGetFrame.png")
+
+        self.cameraPreviewLabel.setPixmap(self.cameraGetPixmap.scaled(640, 480, Qt.KeepAspectRatio, Qt.FastTransformation))
+
+
+    def stopCaptureCV(self):
+        self.cameraStop = True
+        self.cameraStartButton.setEnabled(True)
+        self.cameraGetButton.setEnabled(False)
+        self.cameraStopButton.setEnabled(False)
+
+        self.cameraFeed.release()
+        cv2.destroyAllWindows()
 
 
 
