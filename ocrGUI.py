@@ -179,12 +179,20 @@ class ocrGUI(QWidget):
 
     def openResult(self):
         self.resultWindow = QWidget()
-        self.resultWindowLabel = QLabel()
         self.resultWindowGrid = QGridLayout()
+        self.resultWindowLabel = QLabel()
+        self.resultWindowTxtButton = QPushButton("EXPORT TO TXT")
+        self.resultWindowPdfButton = QPushButton("EXPORT TO PDF")
 
         if not self.resultPlaceholderPixmap.isNull() :
             self.resultWindowLabel.setPixmap(self.resultPlaceholderPixmap.scaled(640, 480, Qt.KeepAspectRatio, Qt.FastTransformation))
-        self.resultWindowGrid.addWidget(self.resultWindowLabel, 0, 0, 0, 0)
+        self.resultWindowGrid.addWidget(self.resultWindowLabel, 0, 0, 1, 2)
+        self.resultWindowGrid.addWidget(self.resultWindowTxtButton, 1, 0, 1, 1)
+        self.resultWindowGrid.addWidget(self.resultWindowPdfButton, 1, 1, 1, 1)
+
+        testTxt = "C'est une belle journée, je vais me coucher..."
+
+        self.resultWindowPdfButton.clicked.connect(functools.partial(ocrAPI.generatePDF, self.basicExportResultLineEdit.text(), testTxt))
 
         self.resultWindow.setWindowModality(Qt.ApplicationModal);        
         self.resultWindow.setLayout(self.resultWindowGrid)
