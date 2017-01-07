@@ -11,7 +11,7 @@ def binarization1():
     cv2.waitKey(0)
 
     plt.subplot(1, 1, 1), plt.hist(img.ravel(), 256)
-    plt.text('Histogramme')
+    #plt.text('Histogramme')
     plt.show()
 
     # Adaptive Gaussian Thresholding + connexite
@@ -101,17 +101,13 @@ def labelingConnectivity(image):
     cv2.waitKey(0)
 
 def binarization2():
-    img = cv2.imread('coucou.jpg', 0)
+    img = cv2.imread('text.jpg', 0)
 
     # Get the Blurred Image
     img_blur = cv2.blur(img, (5,5))
 
     cv2.imshow('original image', img)
     cv2.waitKey(0)
-
-    cv2.imshow('blurred image', img_blur)
-    cv2.waitKey(0)
-
 
     # Getting the corresponding threshold images
     img_blur_th = cv2.adaptiveThreshold(img_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
@@ -125,17 +121,7 @@ def binarization2():
                                         cv2.THRESH_BINARY, 11, 2)
 
 
-    cv2.imshow('image threshold', img_th)
-    cv2.waitKey(0)
-
-    cv2.imshow('image blurred threshold', img_blur_th)
-    cv2.waitKey(0)
-
-    cv2.imshow('image blurred morph threshold', img_blur_th_morph)
-    cv2.waitKey(0)
-
-
-    bluredMask(img_th, img_blur_th_morph)
+    return bluredMask(img_th, img_blur_th_morph)
 
 def bluredMask(image, blurred_Image):
     for i in range(len(image)):
@@ -143,8 +129,4 @@ def bluredMask(image, blurred_Image):
             if blurred_Image[i][j] == 255:
                 image[i][j] = 255
 
-    cv2.imshow('final results', image)
-    cv2.waitKey(0)
-
-
-binarization2()
+    return image
