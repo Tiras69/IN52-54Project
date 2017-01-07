@@ -7,14 +7,15 @@ How-to
 ------
 
 ```bash
-python ocrGUI.py
+python3 ocrGUI.py
 ```
 
 Dependencies
 ------
 
-* [Python 2.7.x](https://www.python.org/downloads/)
+* [Python 3.x](https://www.python.org/downloads/)
 * [Qt5.X](https://www.qt.io/download-open-source/#section-2) + [PyQt5.X](https://www.riverbankcomputing.com/software/pyqt/download5) (Have to use the same version for both, if possible 5.7)
 * [SIP 4.18+](https://www.riverbankcomputing.com/software/sip/download) (Linux only ?)
-* [OpenCV3](http://opencv.org/downloads.html)
+* [OpenCV3+](http://opencv.org/downloads.html)
 * [CMake 3+](https://cmake.org/download/)
+* [PyLaTeX](https://jeltef.github.io/PyLaTeX/current/index.html)
