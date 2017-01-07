@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 
-
 def CreateBase(filename):
     im = cv2.imread(filename)
     imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
@@ -10,8 +9,8 @@ def CreateBase(filename):
     erode = cv2.erode( imgray, verticalRectKernel)
 
 
-    ret,thresh = cv2.threshold(erode,200,255,cv2.THRESH_BINARY)
-    ret, imGrayTresh = cv2.threshold(imgray,200,255,cv2.THRESH_BINARY)
+    ret,thresh = cv2.threshold(erode,150,255,cv2.THRESH_BINARY)
+    ret, imGrayTresh = cv2.threshold(imgray,150,255,cv2.THRESH_BINARY)
 
     im2,contours,hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     rectangles = [cv2.boundingRect(contour) for contour in contours]
@@ -45,11 +44,6 @@ def CreateBase(filename):
     for removeItem in setRemoveList:
         rectangles.remove(removeItem)
 
-
-    drawRectangles(im, rectangles)
-    # cv2.imshow('coutours', im)
-    # cv2.waitKey()
-
     # at the end of this algorithm we have the differents rectangles
     # we sort all rectangle by height
     rectangles.sort(key=lambda x: x[1])
@@ -60,6 +54,16 @@ def CreateBase(filename):
     for rect in rectangles:
         averageH += rect[3]
     averageH /= len(rectangles)
+
+    # removing ponctuation
+    removeList = []
+    for rect in rectangles:
+        if rect[3] < averageH*3/4:
+            removeList.append(rect)
+
+    for item in removeList:
+        rectangles.remove(item)
+
     # now we will detect if between two letters there's a gap higher than the average height
     lineStarts = []
     lineStarts.append(0)
@@ -78,6 +82,10 @@ def CreateBase(filename):
             tmpLst.sort(key=lambda x: x[0])
             rectangles[lineStarts[i]:len(rectangles)-1] = tmpLst
 
+    drawRectangles(im, rectangles)
+    cv2.imshow('coutours', im)
+    cv2.waitKey()
+
     # we know that the first 20 are a etc..
     samples = []# np.empty((0, len(rectangles)))
     for rect in rectangles:
@@ -95,10 +103,10 @@ def CreateBase(filename):
     # responses = np.empty((0, 36))
     # responses = np.append(responses, [i for i in ascii_lowercase])
     # responses = np.append(responses, [str(i) for i in range(0, 10)])
-    responses = np.array([i for i in range(0, 36)]).astype(np.float32)
+    responses = np.array([i for i in range(0, 26)]).astype(np.float32)
     responses = np.repeat(responses, 20)
 
-    return samples, responses
+    return samples, responses, lineStarts
 
 
 def drawRectangles(image, rectangles):
@@ -121,4 +129,4 @@ def rectEqualrect(a,b):
 def rectArea(a):
     return a[2]*a[3]
 
-CreateBase('text1.JPG')
+#CreateBase('BaseminFinal.png')
