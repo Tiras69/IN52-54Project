@@ -4,7 +4,16 @@ import Binarization as bnz
 from matplotlib import pyplot as plt
 
 def LetterDecomposition():
-    image = bnz.binarization2()
+    # for debug only
+    # image = bnz.binarization2()
+
+    # we load directly the example for the tests
+    image = cv2.imread('finalBinarizeImageDebug.png')
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # we want to have the original image in gray scale
+    refimage = cv2.imread('text.jpg')
+    imgrayref = cv2.cvtColor(refimage, cv2.COLOR_BGR2GRAY)
     # imageBin = cv2.threshold(image, 127, 1, cv2.THRESH_BINARY)
 
     # we want just a small circle for complete some letters
@@ -13,36 +22,43 @@ def LetterDecomposition():
     cv2.imshow('final result + dil', dilIM)
     cv2.waitKey()
 
-    InvBinIM, dst = cv2.threshold(dilIM, 127, 1, cv2.THRESH_BINARY_INV)
-
-    # the idea between finding all words is to find components
-    # each class will be a letter
-
-    # im2, contours, hierarchy, = cv2.findContours(dst, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # cv2.drawContours(InvBinIM, contours, -1, (0, 255, 0), 1)
-    # cv2.imshow('contours', InvBinIM)
-    # cv2.waitKey()
-    # linesSquareDecompo(InvBinIM)
+    ret, InvBinIM = cv2.threshold(dilIM, 127, 255, cv2.THRESH_BINARY_INV)
 
 
+
+
+    RectangleArray = []
+    RectangleArray = linesSquareDecompo(InvBinIM)
+
+
+    rectArrWORow = []
+
+    for arr in RectangleArray:
+        for rect in arr:
+            rectArrWORow.append(rect)
+
+    drawRectangles(imgrayref, rectArrWORow)
+    cv2.imshow('rect', imgrayref)
+    cv2.waitKey()
 
     # Debug
-    #for arr in RectangleArray:
-    #    strg = ""
-    #    for rect in arr:
-    #        strg += str(rect)+", "
-    #    print (strg)
+    for arr in RectangleArray:
+        strg = ""
+        for rect in arr:
+            strg += str(rect)+", "
+        print (strg)
 
 
 def linesSquareDecompo(image):
-    # Or we can do the algorithm see in TP
+    # the algorithm see in TP
+
     lineCoord = []
     isInLine = False
     # we take every lines
-    for i in range(len(image[1][1])):
+    for i in range(len(image[1])):
         # we count the value of each lines.
-        # print (InvBinIM[i+1])
-        count = sum(image[1][i])
+        # print (image[i])
+        count = sum(image[i])
         if isInLine == False:
             # as 0 means white and 1
             # if the sum of values is more than 0
@@ -62,7 +78,7 @@ def linesSquareDecompo(image):
         # we take the corresponding matrix:
         workMatrix = []
         for i in range((lineCoord[j * 2 + 1] - lineCoord[j * 2]) + 1):
-            workMatrix.append(image[1][i + lineCoord[j * 2]])
+            workMatrix.append(image[i + lineCoord[j * 2]])
 
         # print ("work matrix "+workMatrix)
 
@@ -98,7 +114,12 @@ def linesSquareDecompo(image):
                                           ColumnCoordinates[lines][(columns * 2) + 1], lineCoord[(lines * 2) + 1]))
         RectangleArray.append(tmpRectArray)
 
-    # now that we have all the rectangles we can proceed to the OCR part
+    return RectangleArray
+
+def drawRectangles(image, rectangles):
+    for rect in rectangles:
+        print(rect)
+        cv2.rectangle(image, (rect.upperLeft.x, rect.upperLeft.y), (rect.bottomRight.x, rect.bottomRight.y), (0, 0, 255), 1)
 
 class Rectangle:
 
@@ -125,28 +146,5 @@ class Point:
 
     def __str__(self):
         return "x: "+str(self.x)+" y: "+str(self.y)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 LetterDecomposition()

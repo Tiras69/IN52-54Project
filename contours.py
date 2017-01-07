@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from string import ascii_lowercase
+
 
 def CreateBase(filename):
     im = cv2.imread(filename)
@@ -53,30 +53,43 @@ def CreateBase(filename):
     # at the end of this algorithm we have the differents rectangles
     # we sort all rectangle by height
     rectangles.sort(key=lambda x: x[1])
+
+    # we want to detect lines
+    # so in the first place we get the average height of a letter
+    averageH = 0
+    for rect in rectangles:
+        averageH += rect[3]
+    averageH /= len(rectangles)
+    # now we will detect if between two letters there's a gap higher than the average height
+    lineStarts = []
+    lineStarts.append(0)
+    for i in range(len(rectangles)-1):
+        if abs(rectangles[i][1]-rectangles[i+1][1]) > averageH/2:
+            lineStarts.append(i+1)
+
+    # sort line by lines
+    for i in range(len(lineStarts)):
+        if i != len(lineStarts)-1:
+            tmpLst = rectangles[lineStarts[i]:lineStarts[i+1]-1]
+            tmpLst.sort(key=lambda x: x[0])
+            rectangles[lineStarts[i]:lineStarts[i + 1] - 1] = tmpLst
+        else:
+            tmpLst = rectangles[lineStarts[i]:len(rectangles)-1]
+            tmpLst.sort(key=lambda x: x[0])
+            rectangles[lineStarts[i]:len(rectangles)-1] = tmpLst
+
     # we know that the first 20 are a etc..
     samples = []# np.empty((0, len(rectangles)))
     for rect in rectangles:
         number = imGrayTresh[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2]]
-        number = cv2.resize(number, (20, 20))
-        number = number.reshape((1, 20*20))
+        number = cv2.resize(number, (10, 10))
+        number = number.reshape((1, 10*10))
 
         samples.append(np.array(number[0]).astype(np.float32))
-
-    print (samples)
 
     samples = np.array(samples)
 
     # samples = np.array(samples)
-
-    # print (samples)
-    print('coucou')
-    print(type(samples))
-    print ('coucou2')
-    print (type(samples[0]))
-    print ('coucou3')
-    print type(samples[0][0])
-
-
 
     # responses
     # responses = np.empty((0, 36))
@@ -84,10 +97,6 @@ def CreateBase(filename):
     # responses = np.append(responses, [str(i) for i in range(0, 10)])
     responses = np.array([i for i in range(0, 36)]).astype(np.float32)
     responses = np.repeat(responses, 20)
-
-
-    print(len(samples))
-    print (len(responses))
 
     return samples, responses
 
@@ -111,3 +120,5 @@ def rectEqualrect(a,b):
 
 def rectArea(a):
     return a[2]*a[3]
+
+CreateBase('text1.JPG')
