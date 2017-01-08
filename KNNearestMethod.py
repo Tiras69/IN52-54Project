@@ -4,10 +4,10 @@ import contours as ctr
 from string import ascii_lowercase
 
 def KNOCR():
-    samples, responses, ls, sp = ctr.CreateBase('BaseminFinal.png')
+    samples, responses, ls, sp, rects= ctr.CreateBase('BaseminFinal.png')
 
     # we use the same method for the other document we want to test.
-    samplesTest, r, linesIndices, spaces = ctr.CreateBase('lorem.png')
+    samplesTest, r, linesIndices, spaces, rectangles = ctr.CreateBase('lorem.png')
 
     for s in samples:
         s = s/255

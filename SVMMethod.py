@@ -39,31 +39,27 @@ def histOfGradient(sourceImg):
 
 
 
-img = cv2.imread('teststraighten.png')
-gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#cv2.imshow('gray_img', gray_img)
-#cv2.waitKey(0)
-imgToProcess = cv2.resize(gray_img, (SIZE, SIZE), cv2.INTER_CUBIC)
-#cv2.imshow('imgToProcess', imgToProcess)
-#cv2.waitKey(0)
-hist = histOfGradient(imgToProcess)
-
 
 img1 = cv2.imread('digits.png',0) 
 cells = [np.hsplit(row,100) for row in np.vsplit(img1,50)]
 train_cells = [ i[:50] for i in cells ]
+#print(len(train_cells[0][0][0]))
 hogdata = [list(map(histOfGradient,row))for row in train_cells]
-print(hogdata)
+#print(hogdata)
 print(len(hogdata[0][0]))
 trainData = np.float32(hogdata).reshape(-1,64)
 print(len(trainData[0]))
 
 
-responses = np.array([i for i in range(0, 26)]).astype(np.float32)
+#responses = np.array([i for i in range(0, 26)]).astype(np.float32)
 #print(responses)
-responses = np.repeat(responses, 20)
+#responses = np.repeat(responses, 20)
 #print(responses)
 #svm = cv2.ml.SVM()
+
+responses = np.repeat(np.arange(26), 20)
+
+
 
 svm = cv2.ml.SVM_create()
 svm.setKernel(cv2.ml.SVM_LINEAR)
@@ -71,28 +67,49 @@ svm.setType(cv2.ml.SVM_C_SVC)
 svm.setC(2.67)
 svm.setGamma(5.383)
 
-samples, responses, ls, rectangles = ctr.CreateBase('BaseminFinal.png')
+samples, responses, ls, space, rectangles = ctr.CreateBase('BaseminFinal.png')
 
 im = cv2.imread('BaseminFinal.png')
 imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 ret, imGrayTresh = cv2.threshold(imgray,150,255,cv2.THRESH_BINARY)
 
-
+i = 0
+data = []
+print(len(rectangles))
 for rect in rectangles:
-        number = imGrayTresh[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2]]
-        number = cv2.resize(number, (10, 10))
-        hists  = histOfGradient(number)
+    number = imGrayTresh[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2]]
+    number = cv2.resize(number, (20, 20))
+    hists  = histOfGradient(number)
+    data.append(hists)
+    print(len(hists))
 
+    i = i +1
+print(i)
+print(len(responses))
 
+data = np.float32(data)
+data = np.array(data)
+print(len(data[0]))
 
-#print(test[0])
-#cv2.imshow('samples', test[25])
-#cv2.waitKey(0)
+model = cv2.ml.KNearest_create()
+model.train(data, cv2.ml.ROW_SAMPLE, responses)
+ret, results, neighbours, dist = model.findNearest(data, 20)
 
+svm.train(data, cv2.ml.ROW_SAMPLE, responses)
 
+samples1, responses1, ls1, space1, rectangles1 = ctr.CreateBase('lorem.png')
 
-    # we use the same method for the other document we want to test.
-#samplesTest, r, linesIndices = ctr.CreateBase('lorem.png')
+im1 = cv2.imread('lorem.png')
+imgray1 = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
+ret1, imGrayTresh1 = cv2.threshold(imgray1,150,255,cv2.THRESH_BINARY)
 
-#for s in samples:
-#    histOfGradient(s)
+data1 = []
+print(len(rectangles))
+for rect in rectangles1:
+    number = imGrayTresh1[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2]]
+    number = cv2.resize(number, (20, 20))
+    hists  = histOfGradient(number)
+    data1.append(hists.astype(np.float32))
+
+result = svm.predict(data1)
+

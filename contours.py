@@ -133,7 +133,7 @@ def CreateBase(filename):
     responses = np.array([i for i in range(0, 26)]).astype(np.float32)
     responses = np.repeat(responses, 20)
 
-    return samples, responses, lineStarts, spaces
+    return samples, responses, lineStarts, spaces, rectangles
 
 
 def drawRectangles(image, rectangles):
