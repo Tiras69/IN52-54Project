@@ -1,6 +1,5 @@
 import numpy as np
 import cv2
-from string import ascii_lowercase
 
 def CreateBase(filename):
     im = cv2.imread(filename)
@@ -10,8 +9,8 @@ def CreateBase(filename):
     erode = cv2.erode( imgray, verticalRectKernel)
 
 
-    ret,thresh = cv2.threshold(erode,200,255,cv2.THRESH_BINARY)
-    ret, imGrayTresh = cv2.threshold(imgray,200,255,cv2.THRESH_BINARY)
+    ret,thresh = cv2.threshold(erode,150,255,cv2.THRESH_BINARY)
+    ret, imGrayTresh = cv2.threshold(imgray,150,255,cv2.THRESH_BINARY)
 
     im2,contours,hierarchy = cv2.findContours(thresh,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
     rectangles = [cv2.boundingRect(contour) for contour in contours]
@@ -45,51 +44,96 @@ def CreateBase(filename):
     for removeItem in setRemoveList:
         rectangles.remove(removeItem)
 
-
-    drawRectangles(im, rectangles)
-    # cv2.imshow('coutours', im)
-    # cv2.waitKey()
-
     # at the end of this algorithm we have the differents rectangles
     # we sort all rectangle by height
     rectangles.sort(key=lambda x: x[1])
+
+    # we want to detect lines
+    # so in the first place we get the average height of a letter
+    averageH = 0
+    for rect in rectangles:
+        averageH += rect[3]
+    averageH /= len(rectangles)
+
+    # removing ponctuation
+    removeList = []
+    for rect in rectangles:
+        if rect[3] < averageH*3/4:
+            removeList.append(rect)
+
+    for item in removeList:
+        rectangles.remove(item)
+
+    # now we will detect if between two letters there's a gap higher than the average height
+    lineStarts = []
+    lineStarts.append(0)
+    for i in range(len(rectangles)-1):
+        if abs(rectangles[i][1]-rectangles[i+1][1]) > averageH/2:
+            lineStarts.append(i+1)
+
+    # sort line by lines
+    for i in range(len(lineStarts)):
+        if i != len(lineStarts)-1:
+            tmpLst = rectangles[lineStarts[i]:lineStarts[i+1]-1]
+            tmpLst.sort(key=lambda x: x[0])
+            rectangles[lineStarts[i]:lineStarts[i + 1] - 1] = tmpLst
+        else:
+            tmpLst = rectangles[lineStarts[i]:len(rectangles)-1]
+            tmpLst.sort(key=lambda x: x[0])
+            rectangles[lineStarts[i]:len(rectangles)-1] = tmpLst
+
+    # in this part we detects blanks between words
+    spaces = []
+    #detect the average space between letter on a line.
+    averageSpace = 0
+    finalDiv = 0
+    for i in range(len(lineStarts)):
+        if i != len(lineStarts)-1:
+            tmpRects = rectangles[lineStarts[i]:lineStarts[i+1]]
+        else:
+            tmpRects = rectangles[lineStarts[i]:len(rectangles)-1]
+
+        for rect in range(len(tmpRects)-1):
+            averageSpace += abs((tmpRects[rect][0]+tmpRects[rect][2])-(tmpRects[rect+1][0]))
+        finalDiv += len(tmpRects)-1
+    averageSpace = averageSpace / finalDiv
+    # then we detect every space superior to 1/4 the average.
+    for i in range(len(lineStarts)):
+        if i != len(lineStarts)-1:
+            tmpRects = rectangles[lineStarts[i]:lineStarts[i+1]]
+        else:
+            tmpRects = rectangles[lineStarts[i]:len(rectangles)-1]
+
+        for rect in range(len(tmpRects)-1):
+            spacing = abs((tmpRects[rect][0]+tmpRects[rect][2])-(tmpRects[rect+1][0]))
+            if spacing > averageSpace/4:
+                spaces.append(lineStarts[i]+rect+1)
+
+    drawRectangles(im, rectangles)
+    cv2.imshow('coutours', im)
+    cv2.waitKey()
+
     # we know that the first 20 are a etc..
     samples = []# np.empty((0, len(rectangles)))
     for rect in rectangles:
         number = imGrayTresh[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2]]
-        number = cv2.resize(number, (20, 20))
-        number = number.reshape((1, 20*20))
+        number = cv2.resize(number, (10, 10))
+        number = number.reshape((1, 10*10))
 
         samples.append(np.array(number[0]).astype(np.float32))
-
-    print (samples)
 
     samples = np.array(samples)
 
     # samples = np.array(samples)
 
-    # print (samples)
-    print('coucou')
-    print(type(samples))
-    print ('coucou2')
-    print (type(samples[0]))
-    print ('coucou3')
-    print type(samples[0][0])
-
-
-
     # responses
     # responses = np.empty((0, 36))
     # responses = np.append(responses, [i for i in ascii_lowercase])
     # responses = np.append(responses, [str(i) for i in range(0, 10)])
-    responses = np.array([i for i in range(0, 36)]).astype(np.float32)
+    responses = np.array([i for i in range(0, 26)]).astype(np.float32)
     responses = np.repeat(responses, 20)
 
-
-    print(len(samples))
-    print (len(responses))
-
-    return samples, responses
+    return samples, responses, lineStarts, spaces, rectangles
 
 
 def drawRectangles(image, rectangles):
@@ -111,3 +155,5 @@ def rectEqualrect(a,b):
 
 def rectArea(a):
     return a[2]*a[3]
+
+#CreateBase('BaseminFinal.png')
