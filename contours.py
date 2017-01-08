@@ -82,6 +82,33 @@ def CreateBase(filename):
             tmpLst.sort(key=lambda x: x[0])
             rectangles[lineStarts[i]:len(rectangles)-1] = tmpLst
 
+    # in this part we detects blanks between words
+    spaces = []
+    #detect the average space between letter on a line.
+    averageSpace = 0
+    finalDiv = 0
+    for i in range(len(lineStarts)):
+        if i != len(lineStarts)-1:
+            tmpRects = rectangles[lineStarts[i]:lineStarts[i+1]]
+        else:
+            tmpRects = rectangles[lineStarts[i]:len(rectangles)-1]
+
+        for rect in range(len(tmpRects)-1):
+            averageSpace += abs((tmpRects[rect][0]+tmpRects[rect][2])-(tmpRects[rect+1][0]))
+        finalDiv += len(tmpRects)-1
+    averageSpace = averageSpace / finalDiv
+    # then we detect every space superior to 1/4 the average.
+    for i in range(len(lineStarts)):
+        if i != len(lineStarts)-1:
+            tmpRects = rectangles[lineStarts[i]:lineStarts[i+1]]
+        else:
+            tmpRects = rectangles[lineStarts[i]:len(rectangles)-1]
+
+        for rect in range(len(tmpRects)-1):
+            spacing = abs((tmpRects[rect][0]+tmpRects[rect][2])-(tmpRects[rect+1][0]))
+            if spacing > averageSpace/4:
+                spaces.append(lineStarts[i]+rect+1)
+
     drawRectangles(im, rectangles)
     cv2.imshow('coutours', im)
     cv2.waitKey()
@@ -106,7 +133,7 @@ def CreateBase(filename):
     responses = np.array([i for i in range(0, 26)]).astype(np.float32)
     responses = np.repeat(responses, 20)
 
-    return samples, responses, lineStarts
+    return samples, responses, lineStarts, spaces
 
 
 def drawRectangles(image, rectangles):
