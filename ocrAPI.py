@@ -15,34 +15,32 @@ import random
 import functools
 import cv2
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-
-from pylatex import Document, Section, Subsection, Command
-from pylatex.utils import italic, NoEscape
+from pylatex import Document, Section, Command
+from pylatex.utils import NoEscape
 
 
 
-def createTex(docFile, resultTxt):
+def createTex(docFile, resultOCR):
     docFile.preamble.append(Command('title', 'OCR Result'))
     docFile.preamble.append(Command('author', getpass.getuser()))
     docFile.preamble.append(Command('date', NoEscape(r'\today')))
     docFile.append(NoEscape(r'\maketitle'))
 
-    with docFile.create(Section('Result 1')):
-        docFile.append(resultTxt)
+    with docFile.create(Section('Result')):
+        docFile.append(resultOCR)
 
 
-def generatePDF(pdfPath, resultTxt):
-    savePath = pdfPath.rsplit(".", 1)[0]
-
+def generatePDF(pdfPath, resultOCR):
     docFile = Document('basic')
-    createTex(docFile, resultTxt)
 
-    docFile.generate_pdf(clean_tex = False, filepath = savePath)
+    createTex(docFile, resultOCR)
 
-
-
+    docFile.generate_pdf(clean_tex = False, filepath = pdfPath)
 
 
+def generateTXT(txtPath, resultOCR):
+    txtFile = open(txtPath + ".txt", 'w')
+
+    txtFile.write(resultOCR)
+
+    txtFile.close()

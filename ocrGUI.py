@@ -22,6 +22,12 @@ from PyQt5.QtWidgets import *
 
 import ocrAPI
 importlib.reload(ocrAPI)
+import methodKNN
+importlib.reload(methodKNN)
+import methodTM
+importlib.reload(methodTM)
+# import methodSVM
+# importlib.reload(methodSVM)
 
 # How to call the ocrAPI functions :
 # ocrAPI.test()
@@ -70,6 +76,10 @@ class ocrGUI(QWidget):
         self.cameraExportResultButton = QPushButton("BROWSE")
         self.cameraComputeButton = QPushButton("COMPUTE CAMERA CHARACTERS RECOGNITION")
 
+        self.optionKPPVRadio = QRadioButton("K Nearest Neighbours (KNN)")
+        self.optionTemplateRadio = QRadioButton("Template Matching (TM)")
+        self.optionSVMRadio = QRadioButton("Support Vector Machines (SVM)")
+
         self.basicDatabaseLabel = QLabel("Database :")
         self.basicTestImageLabel = QLabel("Test Image :")
         self.basicExportResultLabel = QLabel("Result Export :")
@@ -86,14 +96,13 @@ class ocrGUI(QWidget):
         self.menuBar = QMenuBar()
 
         self.fileMenu = QMenu("File")
-        self.optionMenu = QMenu("Options")
         self.helpMenu = QMenu("Help")
 
         self.quitAction = QAction("Quit", self.fileMenu)
         self.aboutAction = QAction("About", self.helpMenu)
 
         self.cameraGetPixmap = QPixmap("res/cameraPlaceholder.png")
-        self.resultPlaceholderPixmap = QPixmap("res/resultPlaceholder.png")
+        self.resultPixmap = QPixmap("res/resultPlaceholder.png")
 
         #------------------------------------------------------------------------------------
         #----------------------------- Widgets configuration  -------------------------------
@@ -103,7 +112,6 @@ class ocrGUI(QWidget):
         self.helpMenu.addAction(self.aboutAction)
 
         self.menuBar.addMenu(self.fileMenu)
-        self.menuBar.addMenu(self.optionMenu)
         self.menuBar.addMenu(self.helpMenu)
 
         if not self.cameraGetPixmap.isNull() :
@@ -117,6 +125,8 @@ class ocrGUI(QWidget):
         self.cameraStartButton.setEnabled(True)
         self.cameraGetButton.setEnabled(False)
         self.cameraStopButton.setEnabled(False)
+
+        self.optionKPPVRadio.setChecked(True)
 
         #------------------------------------------------------------------------------------
         #------------------------------ Connects declaration  -------------------------------
@@ -169,6 +179,10 @@ class ocrGUI(QWidget):
         self.cameraGrid.addWidget(self.cameraExportResultButton, 3, 2, 1, 1)
         self.cameraGrid.addWidget(self.cameraComputeButton, 4, 0, 1, 3)
 
+        self.optionGrid.addWidget(self.optionKPPVRadio, 0, 0, 1, 1)
+        self.optionGrid.addWidget(self.optionTemplateRadio, 1, 0, 1, 1)
+        self.optionGrid.addWidget(self.optionSVMRadio, 2, 0, 1, 1)
+
         self.baseGrid.addWidget(self.ocrTabWidget, 0, 0, 1, 1)
         self.baseGrid.setMenuBar(self.menuBar)
 
@@ -178,21 +192,53 @@ class ocrGUI(QWidget):
 
 
     def openResult(self):
+        if self.sender() == self.basicComputeButton:
+            if self.optionKPPVRadio.isChecked():
+                resultOCR = methodKNN.computeKNN(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text())
+            elif self.optionTemplateRadio.isChecked():
+                resultOCR = methodTM.computeTM(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text())
+            elif self.optionSVMRadio.isChecked():
+                # resultOCR = methodSVM.computeSVM(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text())
+                print("WIP - NOT WORKING")
+                return
+            else:
+                print("ERROR : NO METHOD SELECTED !")
+                return
+
+        elif self.sender() == self.cameraComputeButton:
+            if self.optionKPPVRadio.isChecked():
+                resultOCR = methodKNN.computeKNN(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png")
+            elif self.optionTemplateRadio.isChecked():
+                resultOCR = methodTM.computeTM(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png")
+            elif self.optionSVMRadio.isChecked():
+                # resultOCR = methodSVM.computeSVM(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png")
+                print("WIP - NOT WORKING")
+                return
+            else:
+                print("ERROR : NO METHOD SELECTED !")
+                return
+
         self.resultWindow = QWidget()
         self.resultWindowGrid = QGridLayout()
         self.resultWindowLabel = QLabel()
         self.resultWindowTxtButton = QPushButton("EXPORT TO TXT")
         self.resultWindowPdfButton = QPushButton("EXPORT TO PDF")
 
-        if not self.resultPlaceholderPixmap.isNull() :
-            self.resultWindowLabel.setPixmap(self.resultPlaceholderPixmap.scaled(640, 480, Qt.KeepAspectRatio, Qt.FastTransformation))
+        try:
+            self.resultPixmap = QPixmap("res/characterDetection.png")
+        except:
+            print("NO DETECTION RESULT FOUND, ABORT !")
+            return
+
+        if not self.resultPixmap.isNull() :
+            self.resultWindowLabel.setPixmap(self.resultPixmap.scaled(1024, 768, Qt.KeepAspectRatio, Qt.FastTransformation))
+
         self.resultWindowGrid.addWidget(self.resultWindowLabel, 0, 0, 1, 2)
         self.resultWindowGrid.addWidget(self.resultWindowTxtButton, 1, 0, 1, 1)
         self.resultWindowGrid.addWidget(self.resultWindowPdfButton, 1, 1, 1, 1)
 
-        testTxt = "C'est une belle journée, je vais me coucher..."
-
-        self.resultWindowPdfButton.clicked.connect(functools.partial(ocrAPI.generatePDF, self.basicExportResultLineEdit.text(), testTxt))
+        self.resultWindowTxtButton.clicked.connect(functools.partial(ocrAPI.generateTXT, self.basicExportResultLineEdit.text(), resultOCR))
+        self.resultWindowPdfButton.clicked.connect(functools.partial(ocrAPI.generatePDF, self.basicExportResultLineEdit.text(), resultOCR))
 
         self.resultWindow.setWindowModality(Qt.ApplicationModal);        
         self.resultWindow.setLayout(self.resultWindowGrid)
@@ -235,11 +281,11 @@ class ocrGUI(QWidget):
 
 
     def exportResultBrowse(self, targetWidget, buffer = None):
-        exportResultName = QFileDialog.getSaveFileName(self,"Save your export result", self.lastExportResultPath if self.lastExportResultPath else QDir.homePath(), "Text files (*.txt);;All files (*)")
+        exportResultName = QFileDialog.getSaveFileName(self,"Save your export result", self.lastExportResultPath if self.lastExportResultPath else QDir.homePath(), "Export files (*.txt *.pdf);;All files (*)")
 
         if exportResultName[0]:
             self.lastExportResultPath = exportResultName[0].rsplit("/", 1)[0]
-            return targetWidget.setText(exportResultName[0].rsplit("/", 1)[0] + "/" + exportResultName[0].rsplit("/", 1)[1].split(".", 1)[0] + ".txt")
+            return targetWidget.setText(exportResultName[0].rsplit("/", 1)[0] + "/" + exportResultName[0].rsplit("/", 1)[1].split(".", 1)[0])
 
 
     def startCaptureCV(self):
