@@ -19,8 +19,8 @@ def computeKNN(basePath, testPath):
     model.train(baseSamples, cv2.ml.ROW_SAMPLE, baseResponses)
     ret, results, neighbours, dist = model.findNearest(testSamples, 20)
 
-    print (len(testSamples))
-    print (len(neighbours))
+    # print (len(testSamples))
+    # print (len(neighbours))
 
     indResponses = np.empty((0, 36))
     indResponses = np.append(indResponses, [i for i in ascii_lowercase])

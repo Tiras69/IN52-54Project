@@ -237,10 +237,15 @@ class ocrGUI(QWidget):
         self.resultWindowGrid.addWidget(self.resultWindowTxtButton, 1, 0, 1, 1)
         self.resultWindowGrid.addWidget(self.resultWindowPdfButton, 1, 1, 1, 1)
 
-        self.resultWindowTxtButton.clicked.connect(functools.partial(ocrAPI.generateTXT, self.basicExportResultLineEdit.text(), resultOCR))
-        self.resultWindowPdfButton.clicked.connect(functools.partial(ocrAPI.generatePDF, self.basicExportResultLineEdit.text(), resultOCR))
+        if self.sender() == self.basicComputeButton:
+            self.resultWindowTxtButton.clicked.connect(functools.partial(ocrAPI.generateTXT, self.basicExportResultLineEdit.text(), resultOCR))
+            self.resultWindowPdfButton.clicked.connect(functools.partial(ocrAPI.generatePDF, self.basicExportResultLineEdit.text(), resultOCR))
+        elif self.sender() == self.cameraComputeButton:
+            self.resultWindowTxtButton.clicked.connect(functools.partial(ocrAPI.generateTXT, self.cameraExportResultLineEdit.text(), resultOCR))
+            self.resultWindowPdfButton.clicked.connect(functools.partial(ocrAPI.generatePDF, self.cameraExportResultLineEdit.text(), resultOCR))
+        
 
-        self.resultWindow.setWindowModality(Qt.ApplicationModal);        
+        self.resultWindow.setWindowModality(Qt.ApplicationModal);
         self.resultWindow.setLayout(self.resultWindowGrid)
         self.resultWindow.resize(640, 480)
         self.resultWindow.setWindowTitle("RESULT")
