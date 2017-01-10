@@ -194,11 +194,11 @@ class ocrGUI(QWidget):
     def openResult(self):
         if self.sender() == self.basicComputeButton:
             if self.optionKPPVRadio.isChecked():
-                resultOCR = methodKNN.computeKNN(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text())
+                resultOCR = methodKNN.computeKNN(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text(), False)
             elif self.optionTemplateRadio.isChecked():
-                resultOCR = methodTM.computeTM(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text())
+                resultOCR = methodTM.computeTM(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text(), False)
             elif self.optionSVMRadio.isChecked():
-                # resultOCR = methodSVM.computeSVM(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text())
+                # resultOCR = methodSVM.computeSVM(self.basicDatabaseLineEdit.text(), self.basicTestImageLineEdit.text(), False)
                 print("WIP - NOT WORKING")
                 return
             else:
@@ -207,11 +207,11 @@ class ocrGUI(QWidget):
 
         elif self.sender() == self.cameraComputeButton:
             if self.optionKPPVRadio.isChecked():
-                resultOCR = methodKNN.computeKNN(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png")
+                resultOCR = methodKNN.computeKNN(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png", True)
             elif self.optionTemplateRadio.isChecked():
-                resultOCR = methodTM.computeTM(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png")
+                resultOCR = methodTM.computeTM(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png", True)
             elif self.optionSVMRadio.isChecked():
-                # resultOCR = methodSVM.computeSVM(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png")
+                # resultOCR = methodSVM.computeSVM(self.cameraDatabaseLineEdit.text(), "res/cameraGetFrame.png", True)
                 print("WIP - NOT WORKING")
                 return
             else:

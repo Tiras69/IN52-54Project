@@ -119,7 +119,9 @@ def binarization2(filename):
     img_th = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, \
                                         cv2.THRESH_BINARY, 11, 2)
 
-    return bluredMask(img_th, img_blur_th_morph)
+    # return bluredMask(img_th, img_blur_th_morph)
+    bluredMask(img_th, img_blur_th_morph)
+
 
 def bluredMask(image, blurred_Image):
     for i in range(len(image)):
@@ -127,4 +129,5 @@ def bluredMask(image, blurred_Image):
             if blurred_Image[i][j] == 255:
                 image[i][j] = 255
 
-    return image
+    cv2.imwrite("res/cameraGetFrame.png", image)
+    # return image

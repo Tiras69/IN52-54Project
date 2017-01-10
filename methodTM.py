@@ -1,17 +1,21 @@
 import cv2
 import numpy as np
 import imageProcessing as imPro
+import Binarization as bina
 from string import ascii_lowercase
 
 NUMBER_OF_CHAR_PER_LINE = 20
 NUMBER_OF_CLASS = 26
 
-def computeTM(basePath, testPath):
+def computeTM(basePath, testPath, cameraMode):
     imBase = cv2.imread(basePath)
     imTest = cv2.imread(testPath)
 
     baseSamples, baseResponses, baseLineStarts, baseSpaces, baseRectangles = imPro.computeProcessing(basePath) 
 
+    if cameraMode:
+        bina.binarization2(testPath)
+        
     # we use the same method for the other document we want to test.
     testSamples, testResponses, testLineIndices, testSpaces, testRectangles = imPro.computeProcessing(testPath)
 
